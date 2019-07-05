@@ -1,8 +1,19 @@
 import React, { Component } from "react";
+import {XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineSeries} from 'react-vis';
+
 
 class Weight extends Component {
   constructor() {
     super()
+  }
+
+  genGraphData = () => {
+    let data = this.props.weights.map(weight => {
+      return { x: Date.parse(weight.weight_date),
+              y: weight.weight_kg }
+      })
+      console.log(data);
+      return data;
   }
 
   render() {
@@ -29,7 +40,15 @@ class Weight extends Component {
       </div>
 
       <div>
-        {this.props.weights.map(weight=>(<p>{weight.weight_kg}</p>))}
+        <div className="graph" >
+            <XYPlot xType="time" height={300} width={500}>
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              <XAxis title="Time" />
+              <YAxis title="Weight (kg)" />
+              <LineSeries data={this.genGraphData()} />
+            </XYPlot>
+        </div>
       </div>
 </div>
     );
