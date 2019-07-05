@@ -1,6 +1,21 @@
 import React, { Component } from "react";
 
 class Signup extends Component {
+  constructor(props) {
+    super();
+
+    this.state = {
+      username: "",
+      email: "",
+      password: "",
+      firstname: "",
+      dob: null,
+      height: null,
+      weight: null,
+      gender: "",
+      registrationErrors: ""
+    };
+  }
   render() {
     return (
       <div>
@@ -9,38 +24,56 @@ class Signup extends Component {
           Fill in this lovely form to create your account and sell us your soul
         </p>
         <hr />
-        <form>
-          <label for="username">
+        <form
+          onSubmit={event => {
+            event.preventDefault();
+            console.log("Form Submitted");
+          }}
+        >
+          <label htmlFor="username">
             <b>Username: </b>
           </label>
-          <input placeholder="Enter Username" name="username" />
+          <input type="text" placeholder="Enter Username" name="username" />
           <br />
-          <label for="firstname">
-            <b>First Name: </b>
-          </label>
-          <input placeholder="Enter First Name" name="firstname" />
-          <br />
-          <label for="email">
+          <label htmlFor="email">
             <b>Email Address: </b>
           </label>
-          <input placeholder="Enter Email" name="email" />
+          <input type="email" placeholder="Enter Email" name="email" />
           <br />
-          <label for="dob">
+          <label htmlFor="password">
+            <b>Password: </b>
+          </label>
+          <input type="password" placeholder="Enter Password" name="password" />
+          <br />
+          <label htmlFor="firstname">
+            <b>First Name: </b>
+          </label>
+          <input type="text" placeholder="Enter First Name" name="firstname" />
+          <br />
+          <label htmlFor="dob">
             <b>Date of Birth: </b>
           </label>
-          <input placeholder="DD/MM/YYYY" name="dob" />
+          <input type="date" placeholder="DD/MM/YYYY" name="dob" />
           <br />
-          <label for="height">
+          <label htmlFor="height">
             <b>Height: </b>
           </label>
-          <input placeholder="170 cm" name="height" />
+          <input
+            type="number"
+            placeholder="Enter your height in cm"
+            name="height"
+          />
           <br />
-          <label for="weight">
+          <label htmlFor="weight">
             <b>Weight: </b>
           </label>
-          <input placeholder="Enter your weight in kg" name="weight" />
+          <input
+            type="number"
+            placeholder="Enter your weight in kg"
+            name="weight"
+          />
           <br />
-          <label for="gender">
+          <label htmlFor="gender">
             <b>Gender: </b>
           </label>
           <select name="gender">
@@ -48,6 +81,8 @@ class Signup extends Component {
             <option value="female">Female</option>
           </select>{" "}
           <b>Required to calculate your base metabolic rate</b>
+          <br />
+          <input type="submit" value="Submit" />
         </form>
       </div>
     );
