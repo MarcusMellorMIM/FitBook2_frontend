@@ -9,9 +9,6 @@ import {
 } from "react-vis";
 
 class Weight extends Component {
-  constructor() {
-    super();
-  }
 
   genGraphData = () => {
     // Render the weight object into a form the graph object understands
@@ -28,6 +25,7 @@ class Weight extends Component {
     return (
       <div>
         <div>
+          <h1>Record your weight here</h1>
           <form onSubmit={this.props.submitWeight}>
             <input type="hidden" id="weight_id" name="weight_id" value={id} />
             <label htmlFor="weight_kg">Please enter your latest weight </label>
