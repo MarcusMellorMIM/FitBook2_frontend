@@ -24,7 +24,7 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      user: {},
+      user: null,
       weight: EMPTYWEIGHT,
       weights: [],
       meals: [],
@@ -61,18 +61,18 @@ class App extends React.Component {
 
   deleteWeight = () => {
     // The handler that changes the weight state, for either new or updates of a weight
-       console.log("Deleting weight");
-    let weights = []
+    console.log("Deleting weight");
+    let weights = [];
 
-    fetch(`${WEIGHTS_URL}/${this.state.weight.id}`, {method:"DELETE"} )
-    .then(() => {
-      console.log(`delete ${this.state.weight.id}`)
-      weights = this.state.weights.filter(w=>w.id!==this.state.weight.id)
-      this.setState({ weights: weights })
-      this.setState({ weight: EMPTYWEIGHT })
-    });
+    fetch(`${WEIGHTS_URL}/${this.state.weight.id}`, { method: "DELETE" }).then(
+      () => {
+        console.log(`delete ${this.state.weight.id}`);
+        weights = this.state.weights.filter(w => w.id !== this.state.weight.id);
+        this.setState({ weights: weights });
+        this.setState({ weight: EMPTYWEIGHT });
+      }
+    );
   };
-
 
   submitWeight = event => {
     // Used to create a new weight, or update an existing one
@@ -91,7 +91,7 @@ class App extends React.Component {
     // this.state.weight_d ? date = Date.now() : date = Date.parse(this.state.weight_d)
     // this.state.weight_t==="" ? :
     let weight = {
-      id:this.state.weight.id,
+      id: this.state.weight.id,
       user_id: this.state.user.id,
       weight_kg: this.state.weight.weight_kg,
       weight_date: this.state.weight_date
@@ -101,7 +101,9 @@ class App extends React.Component {
       // Inserting a weight
       console.log("New weight");
 
-      if (!weight.weight_date) { weight.weight_date = new Date(); }
+      if (!weight.weight_date) {
+        weight.weight_date = new Date();
+      }
 
       let configObj = {
         method: "POST",
@@ -141,29 +143,50 @@ class App extends React.Component {
           Object.assign(weights[weightIndex], weight);
           this.setState({ weights: weights });
         });
-
     }
-// Whether inserting or updating, we need to reset the weight state to 
-// get the weight entry/udpate/delete form into initial state
+    // Whether inserting or updating, we need to reset the weight state to
+    // get the weight entry/udpate/delete form into initial state
     this.setState({ weight: EMPTYWEIGHT });
   };
 
   selectWeight = (datapoint, event) => {
-    let weight = this.state.weights.find(w=>w.id===datapoint.id)
-    this.setState({weight:weight})
-  }
+    let weight = this.state.weights.find(w => w.id === datapoint.id);
+    this.setState({ weight: weight });
+  };
 
-// END OF WEIGHT STATE HANDLERS ETC
+  // END OF WEIGHT STATE HANDLERS ETC
 
-// START OF USER STATE HANDLERS
+  // START OF USER STATE HANDLERS
+
+  changeUser = event => {
+    // The handler that changes the user state, for either new or updates of a user
+    let user = {};
+    Object.assign(user, this.state.user);
+    user[event.target.name] = event.target.value;
+    this.setState({ user: user });
+  };
+
   createUser = event => {
     event.preventDefault();
-    console.log(event);
+    console.log(this.state.user);
+
+    debugger;
+
+    let configObj = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(this.state.user)
+    };
+
+    fetch(USERS_URL, configObj).then(data => data.json());
   };
 
   // END OF USER STATE HANDLERS
 
-// Render the pages, with routes called from the selection from Navbar
+  // Render the pages, with routes called from the selection from Navbar
   render() {
     return (
       <Router>
@@ -176,6 +199,7 @@ class App extends React.Component {
               user={this.state.user}
               isLoggedIn={this.state.isLoggedIn}
               createUser={this.createUser}
+              changeUser={this.changeUser}
             />
           )}
         />
