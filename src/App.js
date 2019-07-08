@@ -11,6 +11,9 @@ import Dashboard from "./Dashboard";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 const WEIGHTS_URL = "http://localhost:3000/weights";
 const USERS_URL = "http://localhost:3000/users";
+const MEALS_URL = "http://localhost:3000/meals";
+const APIFOOD_URL = "http://localhost:3000/api/food";
+const APIEXERCISE_URL = "http://localhost:3000/api/exercise";
 
 const EMPTYWEIGHT = {
   id: "",
@@ -20,12 +23,22 @@ const EMPTYWEIGHT = {
   weight_t: ""
 };
 
+const EMPTYFOOD = {
+  foodDetail: "",
+  totalCalories:0,
+  foodDate:"",
+  foodTime:"",
+  details: []
+}
+
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
       user: null,
       weight: EMPTYWEIGHT,
+      food: EMPTYFOOD,
+      foods:[],
       weights: [],
       meals: [],
       exercises: [],
@@ -47,6 +60,83 @@ class App extends React.Component {
       .then(data => {
         this.setState({ weights: data });
       });
+  }
+
+  // FOOD HANDLERS START
+  changeFood = event => {
+    // The handler that changes the food state, for either new or updates of a food entry
+    // As this works off a single detail .... we can reset the entire state if this changes
+    // no need to keep the details in the hash
+    let food = {}
+    Object.assign(food,this.state.food)
+    food[event.target.name] = event.target.value;
+    this.setState({ food: food });
+  };
+
+  changeFoodDetail = (event, index) => {
+// Change an individual food line item
+    let food = {}
+    Object.assign(food,this.state.food)
+    food.details[index][event.target.name] = event.target.value
+    food.totalCalories = this.totalCalories(food.details)
+    this.setState({ food: food });
+  }
+
+  totalCalories = (data) => {
+     return data.map( fd=> 
+             (Math.ceil(fd.serving_qty * fd.nf_calories))).reduce( (total,element) => { return total + element  } )
+  }
+
+  submitFood = event => {
+    // Used to create a new weight, or update an existing one
+    event.preventDefault();
+    let foodDetail = this.state.food.foodDetail;
+
+    let configObj = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({detail:foodDetail})
+    };
+
+    fetch(APIFOOD_URL, configObj)
+    .then( data => data.json())
+    .then( data => {
+      this.setState( {food:{
+              details:data,
+              foodDetail:foodDetail,
+              totalCalories : this.totalCalories(data)
+            }
+            } )
+    })
+  }
+
+  submitFoodDetail = event => {
+    // Store the food and food details records into the database
+    event.preventDefault();
+    let food = this.state.food;
+    
+    Object.assign(food, {user_id:this.state.user.id})
+
+    let configObj = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+            user_id:this.state.user_id, // NEED TO CHANGE WITH AUTH
+            food:food
+          })
+    };
+
+    console.log(configObj )
+    console.log(food)
+    fetch(MEALS_URL, configObj)
+    .then( data => data.json());
+
   }
 
   // WEIGHT HANDLERS START
@@ -216,9 +306,23 @@ class App extends React.Component {
               selectWeight={this.selectWeight}
             />
           )}
-          deleteWeight={this.deleteWeight}
         />
-        <Route path="/Food" component={Food} />
+        <Route 
+        path="/Food" 
+        render={() => (
+          <Food 
+            component={Food} 
+            user={this.state.user} 
+            foods={this.state.foods} 
+            food={this.state.food} 
+            submitFood={this.submitFood}
+            submitFoodDetail={this.submitFoodDetail} 
+            changeFood={this.changeFood}
+            changeFoodDetail={this.changeFoodDetail}
+          />
+          )}
+        />
+
         <Route path="/Dashboard" component={Dashboard} />
         <Route path="/Account" component={Account} />
         <Route path="/Exercise" component={Exercise} />

@@ -43,3 +43,14 @@ code {
 .graph {
   padding-left: 50px;
 } 
+
+/* Used for the large text entry fields */
+.largetext {
+  word-wrap: break-word;
+  width: 20em;
+  font-size: 16px;
+}
+
+.smallNumber {
+  width:3em;
+}
