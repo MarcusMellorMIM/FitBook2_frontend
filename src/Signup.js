@@ -13,13 +13,13 @@ class Signup extends Component {
         </p>
         <hr />
         <form onSubmit={this.props.createUser}>
-          <label htmlFor="username">
+          <label htmlFor="user_name">
             <b>Username: </b>
           </label>
           <input
             type="text"
             placeholder="Enter Username"
-            name="username"
+            name="user_name"
             onChange={this.props.changeUser}
           />
           <br />
@@ -43,13 +43,13 @@ class Signup extends Component {
             onChange={this.props.changeUser}
           />
           <br />
-          <label htmlFor="firstname">
-            <b>First Name: </b>
+          <label htmlFor="name">
+            <b>Name: </b>
           </label>
           <input
             type="text"
-            placeholder="Enter First Name"
-            name="firstname"
+            placeholder="Enter Name"
+            name="name"
             onChange={this.props.changeUser}
           />
           <br />
@@ -63,7 +63,7 @@ class Signup extends Component {
             onChange={this.props.changeUser}
           />
           <br />
-          <label htmlFor="height">
+          <label htmlFor="height_cm">
             <b>Height: </b>
           </label>
           <input
@@ -73,21 +73,13 @@ class Signup extends Component {
             onChange={this.props.changeUser}
           />
           <br />
-          {/* <label htmlFor="weight">
-            <b>Weight: </b>
-          </label>
-          <input
-            type="number"
-            placeholder="Enter your weight in kg"
-            name="weight"
-            onChange={this.props.changeUser}
-          />
-          <br /> */}
           <label htmlFor="gender">
             <b>Gender: </b>
           </label>
           <select name="gender" onChange={this.props.changeUser}>
-            <option value="male">Male</option>
+            <option selected="selected" value="male">
+              Male
+            </option>
             <option value="female">Female</option>
           </select>{" "}
           <b>Required to calculate your base metabolic rate</b>

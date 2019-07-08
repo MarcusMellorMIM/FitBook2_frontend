@@ -178,7 +178,7 @@ class App extends React.Component {
         "Content-Type": "application/json",
         Accept: "application/json"
       },
-      body: JSON.stringify(this.state.user)
+      body: JSON.stringify({ user: this.state.user })
     };
 
     fetch(USERS_URL, configObj).then(data => data.json());
