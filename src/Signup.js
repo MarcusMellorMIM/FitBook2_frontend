@@ -76,10 +76,12 @@ class Signup extends Component {
           <label htmlFor="gender">
             <b>Gender: </b>
           </label>
-          <select name="gender" onChange={this.props.changeUser}>
-            <option selected="selected" value="male">
-              Male
-            </option>
+          <select
+            defaultValue="male"
+            name="gender"
+            onChange={this.props.changeUser}
+          >
+            <option value="male">Male</option>
             <option value="female">Female</option>
           </select>{" "}
           <b>Required to calculate your base metabolic rate</b>

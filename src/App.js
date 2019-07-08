@@ -29,7 +29,7 @@ class App extends React.Component {
       weights: [],
       meals: [],
       exercises: [],
-      isLoggedIn: true
+      isLoggedIn: false
     };
   }
 
