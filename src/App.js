@@ -7,6 +7,7 @@ import Food from "./Food";
 import Account from "./Account";
 import Exercise from "./Exercise";
 import Dashboard from "./Dashboard";
+import { login, getCurrentUser } from "./api";
 
 import { BrowserRouter as Router, Route } from "react-router-dom";
 const WEIGHTS_URL = "http://localhost:3000/weights";
@@ -25,11 +26,11 @@ const EMPTYWEIGHT = {
 
 const EMPTYFOOD = {
   foodDetail: "",
-  totalCalories:0,
-  foodDate:"",
-  foodTime:"",
+  totalCalories: 0,
+  foodDate: "",
+  foodTime: "",
   details: []
-}
+};
 
 class App extends React.Component {
   constructor() {
@@ -38,7 +39,7 @@ class App extends React.Component {
       user: null,
       weight: EMPTYWEIGHT,
       food: EMPTYFOOD,
-      foods:[],
+      foods: [],
       weights: [],
       meals: [],
       exercises: [],
@@ -46,46 +47,49 @@ class App extends React.Component {
     };
   }
 
-  componentDidMount() {
-    // THIS SHOULD BE REPLACED BY THE FUNCTION THAT LOGS ON A USER
-    fetch(`${USERS_URL}/marcus`)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ user: data });
-      });
+  // componentDidMount() {
+  //   // THIS SHOULD BE REPLACED BY THE FUNCTION THAT LOGS ON A USER
+  //   fetch(`${USERS_URL}/marcus`)
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       this.setState({ user: data });
+  //     });
 
-    // SHOULD WE FETCH ALL IN USERS ??? OR SEPERATE DATA ???
-    fetch(`${WEIGHTS_URL}/user/marcus`)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ weights: data });
-      });
-  }
+  //   // SHOULD WE FETCH ALL IN USERS ??? OR SEPERATE DATA ???
+  //   fetch(`${WEIGHTS_URL}/user/marcus`)
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       this.setState({ weights: data });
+  //     });
+  // }
 
   // FOOD HANDLERS START
   changeFood = event => {
     // The handler that changes the food state, for either new or updates of a food entry
     // As this works off a single detail .... we can reset the entire state if this changes
     // no need to keep the details in the hash
-    let food = {}
-    Object.assign(food,this.state.food)
+    let food = {};
+    Object.assign(food, this.state.food);
     food[event.target.name] = event.target.value;
     this.setState({ food: food });
   };
 
   changeFoodDetail = (event, index) => {
-// Change an individual food line item
-    let food = {}
-    Object.assign(food,this.state.food)
-    food.details[index][event.target.name] = event.target.value
-    food.totalCalories = this.totalCalories(food.details)
+    // Change an individual food line item
+    let food = {};
+    Object.assign(food, this.state.food);
+    food.details[index][event.target.name] = event.target.value;
+    food.totalCalories = this.totalCalories(food.details);
     this.setState({ food: food });
-  }
+  };
 
-  totalCalories = (data) => {
-     return data.map( fd=> 
-             (Math.ceil(fd.serving_qty * fd.nf_calories))).reduce( (total,element) => { return total + element  } )
-  }
+  totalCalories = data => {
+    return data
+      .map(fd => Math.ceil(fd.serving_qty * fd.nf_calories))
+      .reduce((total, element) => {
+        return total + element;
+      });
+  };
 
   submitFood = event => {
     // Used to create a new weight, or update an existing one
@@ -98,27 +102,28 @@ class App extends React.Component {
         "Content-Type": "application/json",
         Accept: "application/json"
       },
-      body: JSON.stringify({detail:foodDetail})
+      body: JSON.stringify({ detail: foodDetail })
     };
 
     fetch(APIFOOD_URL, configObj)
-    .then( data => data.json())
-    .then( data => {
-      this.setState( {food:{
-              details:data,
-              foodDetail:foodDetail,
-              totalCalories : this.totalCalories(data)
-            }
-            } )
-    })
-  }
+      .then(data => data.json())
+      .then(data => {
+        this.setState({
+          food: {
+            details: data,
+            foodDetail: foodDetail,
+            totalCalories: this.totalCalories(data)
+          }
+        });
+      });
+  };
 
   submitFoodDetail = event => {
     // Store the food and food details records into the database
     event.preventDefault();
     let food = this.state.food;
-    
-    Object.assign(food, {user_id:this.state.user.id})
+
+    Object.assign(food, { user_id: this.state.user.id });
 
     let configObj = {
       method: "POST",
@@ -127,17 +132,15 @@ class App extends React.Component {
         Accept: "application/json"
       },
       body: JSON.stringify({
-            user_id:this.state.user_id, // NEED TO CHANGE WITH AUTH
-            food:food
-          })
+        user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
+        food: food
+      })
     };
 
-    console.log(configObj )
-    console.log(food)
-    fetch(MEALS_URL, configObj)
-    .then( data => data.json());
-
-  }
+    console.log(configObj);
+    console.log(food);
+    fetch(MEALS_URL, configObj).then(data => data.json());
+  };
 
   // WEIGHT HANDLERS START
   // All of the weight handlers ... should these be in a seperate file etc ?? whats best practice ?
@@ -258,9 +261,6 @@ class App extends React.Component {
 
   createUser = event => {
     event.preventDefault();
-    console.log(this.state.user);
-
-    debugger;
 
     let configObj = {
       method: "POST",
@@ -274,6 +274,27 @@ class App extends React.Component {
     fetch(USERS_URL, configObj).then(data => data.json());
   };
 
+  handleLoginChange = event => {
+    let user = {};
+    Object.assign(user, this.state.user);
+    user[event.target.name] = event.target.value;
+    this.setState({ user: user });
+  };
+
+  handleLogin = event => {
+    event.preventDefault();
+    console.log("Hello Programmer");
+    debugger;
+    login(this.state.user.user_name, this.state.user.password).then(data => {
+      if (data.error) {
+        alert("something is wrong with your credentials");
+        this.setState({ user_name: "", password: "" });
+      } else {
+        localStorage.setItem("token", data.jwt);
+        this.setState({ isLoggedIn: true, user_name: data.user_name });
+      }
+    });
+  };
   // END OF USER STATE HANDLERS
 
   // Render the pages, with routes called from the selection from Navbar
@@ -281,7 +302,17 @@ class App extends React.Component {
     return (
       <Router>
         <NavBar />
-        <Route path="/Login" component={Login} />
+        <Route
+          path="/Login"
+          render={() => (
+            <Login
+              handleLoginChange={this.handleLoginChange}
+              user={this.state.user}
+              isLoggedIn={this.state.isLoggedIn}
+              handleLogin={this.handleLogin}
+            />
+          )}
+        />
         <Route
           path="/Signup"
           render={() => (
@@ -307,19 +338,19 @@ class App extends React.Component {
             />
           )}
         />
-        <Route 
-        path="/Food" 
-        render={() => (
-          <Food 
-            component={Food} 
-            user={this.state.user} 
-            foods={this.state.foods} 
-            food={this.state.food} 
-            submitFood={this.submitFood}
-            submitFoodDetail={this.submitFoodDetail} 
-            changeFood={this.changeFood}
-            changeFoodDetail={this.changeFoodDetail}
-          />
+        <Route
+          path="/Food"
+          render={() => (
+            <Food
+              component={Food}
+              user={this.state.user}
+              foods={this.state.foods}
+              food={this.state.food}
+              submitFood={this.submitFood}
+              submitFoodDetail={this.submitFoodDetail}
+              changeFood={this.changeFood}
+              changeFoodDetail={this.changeFoodDetail}
+            />
           )}
         />
 
