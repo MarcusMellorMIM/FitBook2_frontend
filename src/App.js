@@ -29,7 +29,7 @@ const EMPTYFOOD = {
   meal_date:"",
   meal_date_d:"",
   meal_date_t:"",
-  details: []
+  meal_details: []
 }
 
 class App extends React.Component {
@@ -90,8 +90,8 @@ class App extends React.Component {
 // Change an individual food line item
     let food = {}
     Object.assign(food,this.state.food)
-    food.details[index][event.target.name] = event.target.value
-    food.totalCalories = this.totalCalories(food.details)
+    food.meal_details[index][event.target.name] = event.target.value
+    food.totalCalories = this.totalCalories(food.meal_details)
     this.setState({ food: food });
   }
 
@@ -123,9 +123,12 @@ class App extends React.Component {
 
     fetch(APIFOOD_URL, configObj)
     .then( data => data.json())
+    .then( data => data.map(fd => {
+      return Object.assign(fd, {photo_thumb:fd.photo.thumb } )
+    }))
     .then( data => {
       this.setState( {food: {
-              details:data,
+              meal_details:data,
               detail:detail,
               totalCalories : this.totalCalories(data),
               meal_date:meal_date,
@@ -157,13 +160,30 @@ class App extends React.Component {
           })
     };
 
-    console.log(configObj )
-    console.log(food)
     fetch(MEALS_URL, configObj)
     .then( data => data.json())
-    .then( () => this.setState( {foods:foods} ));
+    .then( () => this.setState( {foods:foods} ))
+    .then( () => this.resetFood() );
 
   }
+
+  resetFood = () => {
+    // Resets the food entry form
+    this.setState({food:EMPTYFOOD})
+  }
+
+  selectFood = (datapoint, event) => {
+    console.log('Select a graph point')
+    let food={}
+    Object.assign(food, this.state.foods.find(f => f.id === datapoint.id));
+    // Add the split date items to allow the date and time input fields to work
+    Object.assign(food,
+          {meal_date_d:this.dateString(food.meal_date) }, 
+          {meal_date_t:this.timeString(food.meal_date) }
+        )
+    console.log(food)
+    this.setState({ food: food });
+  };
 
   // END OF FOOD HANDLERS
 //////////////////////////////////////////////////////////////////////////////
@@ -346,6 +366,7 @@ class App extends React.Component {
             submitFoodDetail={this.submitFoodDetail} 
             changeFood={this.changeFood}
             changeFoodDetail={this.changeFoodDetail}
+            selectFood={this.selectFood}
           />
           )}
         />

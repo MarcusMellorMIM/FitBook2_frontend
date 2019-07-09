@@ -4,13 +4,13 @@ class FoodDetail extends Component {
 
     render() {
     
-    const {serving_qty, serving_unit,food_name, nf_calories, photo, serving_weight_grams } = this.props.food;
+    const {serving_qty, serving_unit,food_name, nf_calories, photo_thumb, serving_weight_grams } = this.props.food;
     const arrayIndex = this.props.arrayIndex;
 
       return (
           <tr>
             <td>
-                <img src={photo.thumb} alt={food_name} name="photo_thumb"/>
+                <img src={photo_thumb} alt={food_name} name="photo_thumb"/>
             </td>
             <td>
               {food_name}

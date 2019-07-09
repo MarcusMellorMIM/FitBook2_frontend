@@ -1,13 +1,15 @@
 import React, { Component } from "react";
 
-import FoodDetail from "./FoodDetail";
+import FoodShowDetail from "./FoodShowDetail";
+import FoodShowGraph from "./FoodShowGraph";
 
 class Food extends Component {
   render() {
     return (
       <div>
+
         <div>
-          <h1>Record your food, drinks and snacks here</h1>
+          <h2>Record your food, drinks and snacks here</h2>
           <form onSubmit={this.props.submitFood}>
             <label htmlFor="foodDetail">Natural language search here </label>
             <input
@@ -26,65 +28,27 @@ class Food extends Component {
             >
               Submit
             </button>
+            <hr />
           </form>
         </div>
 
-        <div>
-          <table>
-            {this.props.food.details.map((fd, index) => (
-              <FoodDetail
-                key={index}
-                food={fd}
-                arrayIndex={index}
-                changeFoodDetail={this.props.changeFoodDetail}
-              />
-            ))}
-          </table>
-        </div>
+        {this.props.food.meal_details.length > 0 ? (
 
-        {this.props.food.details.length > 0 ? (
-          <div>
-            <h2>Totalling {this.props.food.totalCalories} calories</h2>
-
-            <form onSubmit={this.props.submitFoodDetail}>
-              <label htmlFor="foodDate">
-                Enter date/time or leave blank for now{" "}
-              </label>
-              <input
-                type="date"
-                id="foodDate"
-                name="meal_date_d"
-                onChange={this.props.changeFood}
-              />
-              <input
-                type="time"
-                id="foodTime"
-                name="meal_date_t"
-                onChange={this.props.changeFood}
-              />
-              <label htmlFor="meal_type_id">
-                How would you describe this ?{" "}
-              </label>
-              <select
-                defaultValue="1"
-                name="meal_type_id"
-                onChange={this.props.changeFood}
-              >
-                <option value="1">Angelic</option>
-                <option value="2">Meh</option>
-                <option value="3">Guilty</option>
-              </select>
-              <button
-                type="submit"
-                className="submitBtn"
-                id="foodDetailSubmitBtn"
-                name="foodDetailSubmitBtn"
-              >
-                Submit
-              </button>
-            </form>
-          </div>
-        ) : null}
+            <FoodShowDetail
+              food={this.props.food}
+              changeFoodDetail={this.props.changeFoodDetail}
+              onSubmit={this.props.submitFoodDetail}
+              onChange={this.props.changeFood}
+              totalCalories={this.props.food.totalCalories}
+              submitFoodDetail={this.props.submitFoodDetail}
+            />
+        )
+        : 
+        <FoodShowGraph
+          foods={this.props.foods}
+          selectFood={this.props.selectFood}
+        />
+      }
       </div>
     );
   }
