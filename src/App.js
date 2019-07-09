@@ -30,13 +30,8 @@ const EMPTYFOOD = {
   meal_date:"",
   meal_date_d:"",
   meal_date_t:"",
-<<<<<<< HEAD
   meal_details: []
 }
-=======
-  details: []
-};
->>>>>>> 526eded20fb09324f0e821f7ab7dbc9e5707c181
 
 class App extends React.Component {
   constructor() {
@@ -93,38 +88,20 @@ class App extends React.Component {
   };
 
   changeFoodDetail = (event, index) => {
-<<<<<<< HEAD
 // Change an individual food line item
     let food = {}
     Object.assign(food,this.state.food)
     food.meal_details[index][event.target.name] = event.target.value
     food.totalCalories = this.totalCalories(food.meal_details)
-=======
-    // Change an individual food line item
-    let food = {};
-    Object.assign(food, this.state.food);
-    food.details[index][event.target.name] = event.target.value;
-    food.totalCalories = this.totalCalories(food.details);
->>>>>>> 526eded20fb09324f0e821f7ab7dbc9e5707c181
     this.setState({ food: food });
   };
 
-<<<<<<< HEAD
-  totalCalories = data => {
-    return data
-      .map(fd => Math.ceil(fd.serving_qty * fd.nf_calories))
-      .reduce((total, element) => {
-        return total + element;
-      });
-  };
-=======
   totalCalories = (data) => {
      return data.length>0 ?
        data.map( fd=> 
              (Math.ceil(fd.serving_qty * fd.nf_calories))).reduce( (total,element) => { return total + element  } )
              : 0
   }
->>>>>>> 73c9ed9c86cc656c9a3d2d15585baab518f85102
 
   submitFood = event => {
     // Used to create a new weight, or update an existing one
@@ -142,23 +119,6 @@ class App extends React.Component {
         "Content-Type": "application/json",
         Accept: "application/json"
       },
-<<<<<<< HEAD
-      body: JSON.stringify({ detail: foodDetail })
-    };
-
-    fetch(APIFOOD_URL, configObj)
-      .then(data => data.json())
-      .then(data => {
-        this.setState({
-          food: {
-            details: data,
-            foodDetail: foodDetail,
-            totalCalories: this.totalCalories(data)
-          }
-        });
-      });
-  };
-=======
       body: JSON.stringify({detail:detail})
     };
 
@@ -179,22 +139,15 @@ class App extends React.Component {
             } )
     })
   }
->>>>>>> 73c9ed9c86cc656c9a3d2d15585baab518f85102
 
   submitFoodDetail = event => {
     // Store the food and food details records into the database
     event.preventDefault();
-<<<<<<< HEAD
-    let food = this.state.food;
-
-    Object.assign(food, { user_id: this.state.user.id });
-=======
     let food = {}
     let foods = [...this.state.foods];
     foods.push(food);
 
     Object.assign(food, this.state.food, {user_id:this.state.user.id})
->>>>>>> 73c9ed9c86cc656c9a3d2d15585baab518f85102
 
     let configObj = {
       method: "POST",
@@ -208,17 +161,6 @@ class App extends React.Component {
       })
     };
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-    console.log(configObj);
-    console.log(food);
-    fetch(MEALS_URL, configObj).then(data => data.json());
-  };
-=======
-    console.log(configObj )
-    console.log(food)
->>>>>>> 526eded20fb09324f0e821f7ab7dbc9e5707c181
     fetch(MEALS_URL, configObj)
     .then( data => data.json())
     .then( () => this.setState( {foods:foods} ))
@@ -230,7 +172,6 @@ class App extends React.Component {
     // Resets the food entry form
     this.setState({food:EMPTYFOOD})
   }
->>>>>>> 73c9ed9c86cc656c9a3d2d15585baab518f85102
 
   selectFood = (datapoint, event) => {
     console.log('Select a graph point')
@@ -442,7 +383,6 @@ class App extends React.Component {
             />
           )}
         />
-<<<<<<< HEAD
         <Route 
         path="/Food" 
         render={() => (
@@ -457,21 +397,6 @@ class App extends React.Component {
             changeFoodDetail={this.changeFoodDetail}
             selectFood={this.selectFood}
           />
-=======
-        <Route
-          path="/Food"
-          render={() => (
-            <Food
-              component={Food}
-              user={this.state.user}
-              foods={this.state.foods}
-              food={this.state.food}
-              submitFood={this.submitFood}
-              submitFoodDetail={this.submitFoodDetail}
-              changeFood={this.changeFood}
-              changeFoodDetail={this.changeFoodDetail}
-            />
->>>>>>> 526eded20fb09324f0e821f7ab7dbc9e5707c181
           )}
         />
 
