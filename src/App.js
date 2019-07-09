@@ -18,16 +18,17 @@ const APIEXERCISE_URL = "http://localhost:3000/api/exercise";
 const EMPTYWEIGHT = {
   id: "",
   weight_kg: "",
-  weight_date: null,
-  weight_d: "",
-  weight_t: ""
+  weight_date: "",
+  weight_date_d: "",
+  weight_date_t: ""
 };
 
 const EMPTYFOOD = {
-  foodDetail: "",
+  detail: "",
   totalCalories:0,
-  foodDate:"",
-  foodTime:"",
+  meal_date:"",
+  meal_date_d:"",
+  meal_date_t:"",
   details: []
 }
 
@@ -40,7 +41,6 @@ class App extends React.Component {
       food: EMPTYFOOD,
       foods:[],
       weights: [],
-      meals: [],
       exercises: [],
       isLoggedIn: false
     };
@@ -60,6 +60,19 @@ class App extends React.Component {
       .then(data => {
         this.setState({ weights: data });
       });
+
+      // GET THE FOOD RECORDED AFTER A PERSON HAS BEEN SELECTED
+      fetch(`${MEALS_URL}/user/marcus`)
+      .then(response => response.json())
+      .then (data => {
+        return data.map(food=>{
+          return Object.assign(food, { totalCalories:this.totalCalories(food.meal_details)})
+        })
+      })
+      .then(data => {
+        this.setState({ foods: data });
+      });
+     
   }
 
   // FOOD HANDLERS START
@@ -83,14 +96,21 @@ class App extends React.Component {
   }
 
   totalCalories = (data) => {
-     return data.map( fd=> 
+     return data.length>0 ?
+       data.map( fd=> 
              (Math.ceil(fd.serving_qty * fd.nf_calories))).reduce( (total,element) => { return total + element  } )
+             : 0
   }
 
   submitFood = event => {
     // Used to create a new weight, or update an existing one
     event.preventDefault();
-    let foodDetail = this.state.food.foodDetail;
+
+    // Should save the Object, and then assign details from the array rather than this clumsy manner
+    let detail = this.state.food.detail;
+    let meal_date = this.state.meal_date;
+    let meal_date_d = this.state.meal_date_d;
+    let meal_date_t = this.meal_date_t;
 
     let configObj = {
       method: "POST",
@@ -98,17 +118,20 @@ class App extends React.Component {
         "Content-Type": "application/json",
         Accept: "application/json"
       },
-      body: JSON.stringify({detail:foodDetail})
+      body: JSON.stringify({detail:detail})
     };
 
     fetch(APIFOOD_URL, configObj)
     .then( data => data.json())
     .then( data => {
-      this.setState( {food:{
+      this.setState( {food: {
               details:data,
-              foodDetail:foodDetail,
-              totalCalories : this.totalCalories(data)
-            }
+              detail:detail,
+              totalCalories : this.totalCalories(data),
+              meal_date:meal_date,
+              meal_date_d:meal_date_d,
+              meal_date_t:meal_date_t
+             }
             } )
     })
   }
@@ -116,9 +139,11 @@ class App extends React.Component {
   submitFoodDetail = event => {
     // Store the food and food details records into the database
     event.preventDefault();
-    let food = this.state.food;
-    
-    Object.assign(food, {user_id:this.state.user.id})
+    let food = {}
+    let foods = [...this.state.foods];
+    foods.push(food);
+
+    Object.assign(food, this.state.food, {user_id:this.state.user.id})
 
     let configObj = {
       method: "POST",
@@ -135,11 +160,15 @@ class App extends React.Component {
     console.log(configObj )
     console.log(food)
     fetch(MEALS_URL, configObj)
-    .then( data => data.json());
+    .then( data => data.json())
+    .then( () => this.setState( {foods:foods} ));
 
   }
 
+  // END OF FOOD HANDLERS
+//////////////////////////////////////////////////////////////////////////////
   // WEIGHT HANDLERS START
+
   // All of the weight handlers ... should these be in a seperate file etc ?? whats best practice ?
   changeWeight = event => {
     // The handler that changes the weight state, for either new or updates of a weight
@@ -148,6 +177,11 @@ class App extends React.Component {
     weight[event.target.name] = event.target.value;
     this.setState({ weight: weight });
   };
+
+  resetWeight = () => {
+    // Resets the weight entry form
+    this.setState({weight:EMPTYWEIGHT})
+  }
 
   deleteWeight = () => {
     // The handler that changes the weight state, for either new or updates of a weight
@@ -167,34 +201,14 @@ class App extends React.Component {
   submitWeight = event => {
     // Used to create a new weight, or update an existing one
     event.preventDefault();
-    // Should sort out the date stuff in the onChange hanlder .....
-    //    let date = new Date();
-    // date.setDate(07); AAAARRRRGGGHHHHH
-    //date.setMonth(07);
-    //date.setFullYear(2019);
-    // date.setHours(09);
-    // date.setMinutes(30);
-
     let weights = [...this.state.weights];
 
-    // 1st sort out the date, will work on including time later
-    // this.state.weight_d ? date = Date.now() : date = Date.parse(this.state.weight_d)
-    // this.state.weight_t==="" ? :
-    let weight = {
-      id: this.state.weight.id,
-      user_id: this.state.user.id,
-      weight_kg: this.state.weight.weight_kg,
-      weight_date: this.state.weight_date
-    };
+// The date handling is now done on the backend
+    let weight = {}
+    Object.assign(weight, this.state.weight, {user_id:this.state.user.id} )
 
     if (this.state.weight.id === "") {
       // Inserting a weight
-      console.log("New weight");
-
-      if (!weight.weight_date) {
-        weight.weight_date = new Date();
-      }
-
       let configObj = {
         method: "POST",
         headers: {
@@ -216,7 +230,6 @@ class App extends React.Component {
         });
     } else {
       //Updating a weight in the database TO BE TESTED
-      console.log("Update weight");
       let configObj = {
         method: "PATCH",
         headers: {
@@ -241,13 +254,26 @@ class App extends React.Component {
 
   selectWeight = (datapoint, event) => {
     let weight = this.state.weights.find(w => w.id === datapoint.id);
+    // Add the split date items to allow the date and time input fields to work
+    Object.assign(weight,
+          {weight_date_d:this.dateString(weight.weight_date) }, 
+          {weight_date_t:this.timeString(weight.weight_date) }
+        )
     this.setState({ weight: weight });
   };
 
+  dateString = (date) => {
+  // Used by the date part of a date item ... will return the YYYY-MM-YY bit of a date
+      return !!date ? date.toString().slice(0,10) : null
+  }
+
+  timeString = (date) => {
+  // Used by the time part of a date item .. will return the HH:MI bit of a date
+    return !!date ? date.toString().slice(11,16) : null 
+  }
   // END OF WEIGHT STATE HANDLERS ETC
-
+//////////////////////////////////////////////////////////////////////////////
   // START OF USER STATE HANDLERS
-
   changeUser = event => {
     // The handler that changes the user state, for either new or updates of a user
     let user = {};
@@ -304,6 +330,7 @@ class App extends React.Component {
               changeWeight={this.changeWeight}
               deleteWeight={this.deleteWeight}
               selectWeight={this.selectWeight}
+              resetWeight={this.resetWeight}
             />
           )}
         />
