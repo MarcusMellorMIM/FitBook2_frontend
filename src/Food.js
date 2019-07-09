@@ -33,6 +33,12 @@ class Food extends Component {
             <label htmlFor="foodDate">Enter date/time or leave blank for now </label>
             <input type="date" id="foodDate" name="foodDate" onChange={this.props.changeFood} />
             <input type="time" id="foodTime" name="foodTime" onChange={this.props.changeFood} />
+          <label htmlFor="meal_type_id">How would you describe this ? </label>
+          <select defaultValue="1" name="meal_type_id" onChange={this.props.changeFood}>
+            <option value="1">Angelic</option>
+            <option value="2">Meh</option>
+            <option value="3">Guilty</option>
+          </select>
             <button type="submit" className="submitBtn" id="foodDetailSubmitBtn" name="foodDetailSubmitBtn" >Submit</button>
           </form>
       </div>
