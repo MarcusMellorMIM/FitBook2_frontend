@@ -10,7 +10,7 @@ class FoodDetail extends Component {
       return (
           <tr>
             <td>
-                <img src={photo.thumb} alt={food_name}/>
+                <img src={photo.thumb} alt={food_name} name="photo_thumb"/>
             </td>
             <td>
               {food_name}
