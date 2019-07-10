@@ -8,9 +8,7 @@ class Signup extends Component {
     return (
       <div>
         <h1>Signup </h1>
-        <p>
-          Fill in this lovely form to create your account and sell us your soul
-        </p>
+        <p>Create your account using this form</p>
         <hr />
         <form onSubmit={this.props.createUser}>
           <label htmlFor="user_name">

@@ -18,8 +18,3 @@ export const getCurrentUser = token => {
     headers: { ...headers, Authorization: token }
   }).then(res => res.json());
 };
-
-// export default {
-//   login,
-//   getCurrentUser
-// };

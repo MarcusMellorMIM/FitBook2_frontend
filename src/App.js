@@ -26,12 +26,12 @@ const EMPTYWEIGHT = {
 
 const EMPTYFOOD = {
   detail: "",
-  totalCalories:0,
-  meal_date:"",
-  meal_date_d:"",
-  meal_date_t:"",
+  totalCalories: 0,
+  meal_date: "",
+  meal_date_d: "",
+  meal_date_t: "",
   meal_details: []
-}
+};
 
 class App extends React.Component {
   constructor() {
@@ -48,33 +48,42 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    // THIS SHOULD BE REPLACED BY THE FUNCTION THAT LOGS ON A USER
-    fetch(`${USERS_URL}/marcus`)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ user: data });
+    const token = localStorage.getItem("token");
+    if (token) {
+      getCurrentUser(token).then(user => {
+        this.setState({ isLoggedIn: true, user: user });
       });
-
-    // SHOULD WE FETCH ALL IN USERS ??? OR SEPERATE DATA ???
-    fetch(`${WEIGHTS_URL}/user/marcus`)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ weights: data });
-      });
-
-      // GET THE FOOD RECORDED AFTER A PERSON HAS BEEN SELECTED
-      fetch(`${MEALS_URL}/user/marcus`)
-      .then(response => response.json())
-      .then (data => {
-        return data.map(food=>{
-          return Object.assign(food, { totalCalories:this.totalCalories(food.meal_details)})
-        })
-      })
-      .then(data => {
-        this.setState({ foods: data });
-      });
-     
+    }
   }
+
+  // componentDidMount() {
+  //   // THIS SHOULD BE REPLACED BY THE FUNCTION THAT LOGS ON A USER
+  //   fetch(`${USERS_URL}/marcus`)
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       this.setState({ user: data });
+  //     });
+
+  //   // SHOULD WE FETCH ALL IN USERS ??? OR SEPERATE DATA ???
+  //   fetch(`${WEIGHTS_URL}/user/marcus`)
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       this.setState({ weights: data });
+  //     });
+
+  //     // GET THE FOOD RECORDED AFTER A PERSON HAS BEEN SELECTED
+  //     fetch(`${MEALS_URL}/user/marcus`)
+  //     .then(response => response.json())
+  //     .then (data => {
+  //       return data.map(food=>{
+  //         return Object.assign(food, { totalCalories:this.totalCalories(food.meal_details)})
+  //       })
+  //     })
+  //     .then(data => {
+  //       this.setState({ foods: data });
+  //     });
+
+  // }
 
   // FOOD HANDLERS START
   changeFood = event => {
@@ -88,20 +97,23 @@ class App extends React.Component {
   };
 
   changeFoodDetail = (event, index) => {
-// Change an individual food line item
-    let food = {}
-    Object.assign(food,this.state.food)
-    food.meal_details[index][event.target.name] = event.target.value
-    food.totalCalories = this.totalCalories(food.meal_details)
+    // Change an individual food line item
+    let food = {};
+    Object.assign(food, this.state.food);
+    food.meal_details[index][event.target.name] = event.target.value;
+    food.totalCalories = this.totalCalories(food.meal_details);
     this.setState({ food: food });
   };
 
-  totalCalories = (data) => {
-     return data.length>0 ?
-       data.map( fd=> 
-             (Math.ceil(fd.serving_qty * fd.nf_calories))).reduce( (total,element) => { return total + element  } )
-             : 0
-  }
+  totalCalories = data => {
+    return data.length > 0
+      ? data
+          .map(fd => Math.ceil(fd.serving_qty * fd.nf_calories))
+          .reduce((total, element) => {
+            return total + element;
+          })
+      : 0;
+  };
 
   submitFood = event => {
     // Used to create a new weight, or update an existing one
@@ -119,35 +131,38 @@ class App extends React.Component {
         "Content-Type": "application/json",
         Accept: "application/json"
       },
-      body: JSON.stringify({detail:detail})
+      body: JSON.stringify({ detail: detail })
     };
 
     fetch(APIFOOD_URL, configObj)
-    .then( data => data.json())
-    .then( data => data.map(fd => {
-      return Object.assign(fd, {photo_thumb:fd.photo.thumb } )
-    }))
-    .then( data => {
-      this.setState( {food: {
-              meal_details:data,
-              detail:detail,
-              totalCalories : this.totalCalories(data),
-              meal_date:meal_date,
-              meal_date_d:meal_date_d,
-              meal_date_t:meal_date_t
-             }
-            } )
-    })
-  }
+      .then(data => data.json())
+      .then(data =>
+        data.map(fd => {
+          return Object.assign(fd, { photo_thumb: fd.photo.thumb });
+        })
+      )
+      .then(data => {
+        this.setState({
+          food: {
+            meal_details: data,
+            detail: detail,
+            totalCalories: this.totalCalories(data),
+            meal_date: meal_date,
+            meal_date_d: meal_date_d,
+            meal_date_t: meal_date_t
+          }
+        });
+      });
+  };
 
   submitFoodDetail = event => {
     // Store the food and food details records into the database
     event.preventDefault();
-    let food = {}
+    let food = {};
     let foods = [...this.state.foods];
     foods.push(food);
 
-    Object.assign(food, this.state.food, {user_id:this.state.user.id})
+    Object.assign(food, this.state.food, { user_id: this.state.user.id });
 
     let configObj = {
       method: "POST",
@@ -162,32 +177,32 @@ class App extends React.Component {
     };
 
     fetch(MEALS_URL, configObj)
-    .then( data => data.json())
-    .then( () => this.setState( {foods:foods} ))
-    .then( () => this.resetFood() );
-
-  }
+      .then(data => data.json())
+      .then(() => this.setState({ foods: foods }))
+      .then(() => this.resetFood());
+  };
 
   resetFood = () => {
     // Resets the food entry form
-    this.setState({food:EMPTYFOOD})
-  }
+    this.setState({ food: EMPTYFOOD });
+  };
 
   selectFood = (datapoint, event) => {
-    console.log('Select a graph point')
-    let food={}
+    console.log("Select a graph point");
+    let food = {};
     Object.assign(food, this.state.foods.find(f => f.id === datapoint.id));
     // Add the split date items to allow the date and time input fields to work
-    Object.assign(food,
-          {meal_date_d:this.dateString(food.meal_date) }, 
-          {meal_date_t:this.timeString(food.meal_date) }
-        )
-    console.log(food)
+    Object.assign(
+      food,
+      { meal_date_d: this.dateString(food.meal_date) },
+      { meal_date_t: this.timeString(food.meal_date) }
+    );
+    console.log(food);
     this.setState({ food: food });
   };
 
   // END OF FOOD HANDLERS
-//////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // WEIGHT HANDLERS START
 
   // All of the weight handlers ... should these be in a seperate file etc ?? whats best practice ?
@@ -201,8 +216,8 @@ class App extends React.Component {
 
   resetWeight = () => {
     // Resets the weight entry form
-    this.setState({weight:EMPTYWEIGHT})
-  }
+    this.setState({ weight: EMPTYWEIGHT });
+  };
 
   deleteWeight = () => {
     // The handler that changes the weight state, for either new or updates of a weight
@@ -224,9 +239,9 @@ class App extends React.Component {
     event.preventDefault();
     let weights = [...this.state.weights];
 
-// The date handling is now done on the backend
-    let weight = {}
-    Object.assign(weight, this.state.weight, {user_id:this.state.user.id} )
+    // The date handling is now done on the backend
+    let weight = {};
+    Object.assign(weight, this.state.weight, { user_id: this.state.user.id });
 
     if (this.state.weight.id === "") {
       // Inserting a weight
@@ -276,24 +291,25 @@ class App extends React.Component {
   selectWeight = (datapoint, event) => {
     let weight = this.state.weights.find(w => w.id === datapoint.id);
     // Add the split date items to allow the date and time input fields to work
-    Object.assign(weight,
-          {weight_date_d:this.dateString(weight.weight_date) }, 
-          {weight_date_t:this.timeString(weight.weight_date) }
-        )
+    Object.assign(
+      weight,
+      { weight_date_d: this.dateString(weight.weight_date) },
+      { weight_date_t: this.timeString(weight.weight_date) }
+    );
     this.setState({ weight: weight });
   };
 
-  dateString = (date) => {
-  // Used by the date part of a date item ... will return the YYYY-MM-YY bit of a date
-      return !!date ? date.toString().slice(0,10) : null
-  }
+  dateString = date => {
+    // Used by the date part of a date item ... will return the YYYY-MM-YY bit of a date
+    return !!date ? date.toString().slice(0, 10) : null;
+  };
 
-  timeString = (date) => {
-  // Used by the time part of a date item .. will return the HH:MI bit of a date
-    return !!date ? date.toString().slice(11,16) : null 
-  }
+  timeString = date => {
+    // Used by the time part of a date item .. will return the HH:MI bit of a date
+    return !!date ? date.toString().slice(11, 16) : null;
+  };
   // END OF WEIGHT STATE HANDLERS ETC
-//////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // START OF USER STATE HANDLERS
   changeUser = event => {
     // The handler that changes the user state, for either new or updates of a user
@@ -328,14 +344,14 @@ class App extends React.Component {
   handleLogin = event => {
     event.preventDefault();
     console.log("Hello Programmer");
-    debugger;
     login(this.state.user.user_name, this.state.user.password).then(data => {
       if (data.error) {
         alert("something is wrong with your credentials");
         this.setState({ user_name: "", password: "" });
       } else {
         localStorage.setItem("token", data.jwt);
-        this.setState({ isLoggedIn: true, user_name: data.user_name });
+        debugger;
+        this.setState({ isLoggedIn: true, user: data.user });
       }
     });
   };
@@ -383,20 +399,20 @@ class App extends React.Component {
             />
           )}
         />
-        <Route 
-        path="/Food" 
-        render={() => (
-          <Food 
-            component={Food} 
-            user={this.state.user} 
-            foods={this.state.foods} 
-            food={this.state.food} 
-            submitFood={this.submitFood}
-            submitFoodDetail={this.submitFoodDetail} 
-            changeFood={this.changeFood}
-            changeFoodDetail={this.changeFoodDetail}
-            selectFood={this.selectFood}
-          />
+        <Route
+          path="/Food"
+          render={() => (
+            <Food
+              component={Food}
+              user={this.state.user}
+              foods={this.state.foods}
+              food={this.state.food}
+              submitFood={this.submitFood}
+              submitFoodDetail={this.submitFoodDetail}
+              changeFood={this.changeFood}
+              changeFoodDetail={this.changeFoodDetail}
+              selectFood={this.selectFood}
+            />
           )}
         />
 
