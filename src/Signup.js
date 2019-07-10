@@ -1,14 +1,11 @@
 import React, { Component } from "react";
 
 class Signup extends Component {
-  constructor() {
-    super();
-  }
   render() {
     return (
       <div>
-        <h1>Signup </h1>
-        <p>Create your account using this form</p>
+        <h1>Sign up </h1>
+        <h3>Create your account</h3>
         <hr />
         <form onSubmit={this.props.createUser}>
           <label htmlFor="user_name">
@@ -78,8 +75,7 @@ class Signup extends Component {
             <option value="none">Choose Gender</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
-          </select>{" "}
-          <b>Required to calculate your base metabolic rate</b>
+          </select>
           <br />
           <input type="submit" value="Submit" />
         </form>

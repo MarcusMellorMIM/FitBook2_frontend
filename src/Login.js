@@ -1,16 +1,13 @@
 import React, { Component } from "react";
 
 class Login extends Component {
-  constructor() {
-    super();
-  }
   render() {
     return (
       <div>
-        <h1>Login!!!</h1>
+        <h1>Log in</h1>
         {this.props.isLoggedIn ? (
           <div>
-            <p> {`Hi ${this.props.user.name}, you're now logged in `}</p>
+            <p> {`Hi ${this.props.user.name}, you're now logged in`}</p>
             <button onClick={this.props.handleLogOut}>Log Out</button>
           </div>
         ) : (
