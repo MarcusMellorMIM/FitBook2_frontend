@@ -10,6 +10,7 @@ import Dashboard from "./Dashboard";
 import { login, getCurrentUser } from "./api";
 
 import { BrowserRouter as Router, Route } from "react-router-dom";
+import continuousSizeLegend from "react-vis/dist/legends/continuous-size-legend";
 const WEIGHTS_URL = "http://localhost:3000/weights";
 const USERS_URL = "http://localhost:3000/users";
 const MEALS_URL = "http://localhost:3000/meals";
@@ -85,7 +86,7 @@ class App extends React.Component {
       .then(data => {
         return data.map(food => {
           return Object.assign(food, {
-            totalCalories: this.totalCalories(food.meal_details)
+            totalCalories: this.foodTotalCalories(food.meal_details)
           });
         });
       })
@@ -94,18 +95,18 @@ class App extends React.Component {
       });
 
     // GET THE EXERCISE RECORDED AFTER A PERSON HAS BEEN SELECTED
-    // fetch(`${EXERCISES_URL}/user/${this.state.user.user_name}`)
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     return data.map(exercise => {
-    //       return Object.assign(exercise, {
-    //         totalCalories: this.exerciseTotalCalories(exercise.exercise_details)
-    //       });
-    //     });
-    //   })
-    //   .then(data => {
-    //     this.setState({ exercises: data });
-    //   });
+    fetch(`${EXERCISES_URL}/user/${this.state.user.user_name}`)
+      .then(response => response.json())
+      .then(data => {
+        return data.map(exercise => {
+          return Object.assign(exercise, {
+            totalCalories: this.exerciseTotalCalories(exercise.exercise_details)
+          });
+        });
+      })
+      .then(data => {
+        this.setState({ exercises: data });
+      });
   }
 
   ///////////////////////////////////////////////////////////////////////////////////
@@ -266,18 +267,28 @@ class App extends React.Component {
     let food = {};
     Object.assign(food, this.state.food);
     food.meal_details[index][event.target.name] = event.target.value;
-    food.totalCalories = this.totalCalories(food.meal_details);
+    food.totalCalories = this.foodTotalCalories(food.meal_details);
     this.setState({ food: food });
   };
 
-  totalCalories = data => {
+  foodTotalCalories = data => {
     return data.length > 0
       ? data
-          .map(fd => Math.ceil(fd.serving_qty * fd.nf_calories))
+          .map(fd => Math.ceil(fd.serving_qty * fd.unit_calories))
           .reduce((total, element) => {
             return total + element;
           })
       : 0;
+  };
+
+  getFoodUnitCalories = (calories, serving_qty) => {
+    // Returns the base unit, which is calories per serving unit, allowing for user adjustments.
+    return parseFloat(calories) / parseFloat(serving_qty);
+  };
+
+  getFoodUnitGrams = (serving_weight_grams, serving_qty) => {
+    // Returns the base unit, which is grams per serving unit, allowing for user adjustments.
+    return parseFloat(serving_weight_grams) / parseFloat(serving_qty);
   };
 
   submitFood = event => {
@@ -304,7 +315,22 @@ class App extends React.Component {
       .then(data => data.json())
       .then(data =>
         data.map(fd => {
-          return Object.assign(fd, { photo_thumb: fd.photo.thumb });
+          return Object.assign(
+            fd,
+            { photo_thumb: fd.photo.thumb },
+            {
+              unit_calories: this.getFoodUnitCalories(
+                fd.nf_calories,
+                fd.serving_qty
+              )
+            },
+            {
+              unit_grams: this.getFoodUnitGrams(
+                fd.serving_weight_grams,
+                fd.serving_qty
+              )
+            }
+          );
         })
       )
       .then(data => {
@@ -312,7 +338,7 @@ class App extends React.Component {
           food: {
             meal_details: data,
             detail: detail,
-            totalCalories: this.totalCalories(data),
+            totalCalories: this.foodTotalCalories(data),
             meal_date: meal_date,
             meal_date_d: meal_date_d,
             meal_date_t: meal_date_t
@@ -324,15 +350,44 @@ class App extends React.Component {
   submitFoodDetail = event => {
     event.preventDefault();
 
-    if (this.state.food.id !== null) {
+    if (!this.state.food.id) {
+      console.log("INSERT");
       this.createFoodDetail();
     } else {
+      console.log("UPDATE");
       this.updateFoodDetail();
     }
   };
 
   updateFoodDetail = () => {
     console.log(`Updating food record ${this.state.food.id}`);
+    // Store the food and food details records into the database
+    let food = {};
+    // Remove this food from the array, so we can add the fully changed object
+    // in the fetch
+    let foods = this.state.foods.filter(f => f.id !== this.state.food.id);
+
+    Object.assign(food, this.state.food, { user_id: this.state.user.id });
+
+    let configObj = {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+        user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
+        food: food
+      })
+    };
+
+    fetch(`${MEALS_URL}/${food.id}`, configObj)
+      .then(data => data.json())
+      .then(data => {
+        foods.push(data);
+      })
+      .then(() => this.setState({ foods: foods }))
+      .then(() => this.resetFood());
   };
 
   createFoodDetail = () => {
@@ -341,7 +396,7 @@ class App extends React.Component {
     let foods = [...this.state.foods];
     //    foods.push(food);
 
-    Object.assign(food, this.state.food);
+    Object.assign(food, this.state.food, { user_id: this.state.user.id });
 
     let configObj = {
       method: "POST",
@@ -366,6 +421,7 @@ class App extends React.Component {
 
   resetFood = () => {
     // Resets the food entry form
+    console.log("RESET FOOD");
     this.setState({ food: EMPTYFOOD });
   };
 

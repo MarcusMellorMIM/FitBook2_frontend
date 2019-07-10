@@ -4,7 +4,7 @@ class FoodDetail extends Component {
 
     render() {
     
-    const {serving_qty, serving_unit,food_name, nf_calories, photo_thumb, serving_weight_grams } = this.props.food;
+    const {serving_qty, serving_unit,food_name, unit_calories, photo_thumb, unit_grams } = this.props.food;
     const arrayIndex = this.props.arrayIndex;
 
       return (
@@ -22,10 +22,10 @@ class FoodDetail extends Component {
               {serving_unit}
           </td>
           <td>
-            {Math.ceil(serving_qty * serving_weight_grams)} grams
+            {Math.ceil(serving_qty * unit_grams)} grams
           </td>
           <td>
-              {Math.ceil(serving_qty * nf_calories)} calories
+              {Math.ceil(serving_qty * unit_calories)} calories
           </td>
           </tr>
       );
