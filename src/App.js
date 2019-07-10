@@ -321,17 +321,20 @@ class App extends React.Component {
 
   createUser = event => {
     event.preventDefault();
+    if (this.state.user.gender) {
+      let configObj = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ user: this.state.user })
+      };
 
-    let configObj = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({ user: this.state.user })
-    };
-
-    fetch(USERS_URL, configObj).then(data => data.json());
+      fetch(USERS_URL, configObj).then(data => data.json());
+    } else {
+      alert("choose a gender");
+    }
   };
 
   handleLoginChange = event => {
@@ -355,6 +358,20 @@ class App extends React.Component {
       }
     });
   };
+
+  handleLogOut = () => {
+    localStorage.clear("token");
+    this.setState({
+      user: null,
+      weight: EMPTYWEIGHT,
+      food: EMPTYFOOD,
+      foods: [],
+      weights: [],
+      exercises: [],
+      isLoggedIn: false
+    });
+  };
+
   // END OF USER STATE HANDLERS
 
   // Render the pages, with routes called from the selection from Navbar
@@ -370,6 +387,7 @@ class App extends React.Component {
               user={this.state.user}
               isLoggedIn={this.state.isLoggedIn}
               handleLogin={this.handleLogin}
+              handleLogout={this.handleLogout}
             />
           )}
         />

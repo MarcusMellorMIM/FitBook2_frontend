@@ -10,7 +10,7 @@ class Login extends Component {
         <h1>Login!!!</h1>
         {this.props.isLoggedIn ? (
           <div>
-            <p> {`you're logged in as ${this.props.username}`}</p>
+            <p> {`Hi ${this.props.user.name}, you're now logged in `}</p>
           </div>
         ) : (
           <form>

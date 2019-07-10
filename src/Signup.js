@@ -74,11 +74,8 @@ class Signup extends Component {
           <label htmlFor="gender">
             <b>Gender: </b>
           </label>
-          <select
-            defaultValue="male"
-            name="gender"
-            onChange={this.props.changeUser}
-          >
+          <select name="gender" onChange={this.props.changeUser}>
+            <option value="none">Choose Gender</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
           </select>{" "}
