@@ -13,6 +13,7 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 const WEIGHTS_URL = "http://localhost:3000/weights";
 const USERS_URL = "http://localhost:3000/users";
 const MEALS_URL = "http://localhost:3000/meals";
+const EXERCISES_URL = "http://localhost:3000/exercises";
 const APIFOOD_URL = "http://localhost:3000/api/food";
 const APIEXERCISE_URL = "http://localhost:3000/api/exercise";
 
@@ -26,22 +27,33 @@ const EMPTYWEIGHT = {
 
 const EMPTYFOOD = {
   detail: "",
-  totalCalories: 0,
-  meal_date: "",
-  meal_date_d: "",
-  meal_date_t: "",
+  totalCalories:0,
+  meal_date:"",
+  meal_date_d:"",
+  meal_date_t:"",
+  meal_type_id:"",
   meal_details: []
-};
+}
+const EMPTYEXERCISE = {
+  detail: "",
+  totalCalories:0,
+  exercise_date:"",
+  exercise_date_d:"",
+  exercise_date_t:"",
+  exercise_type_id:"",
+  exercise_details: []
+}
 
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
       user: null,
-      weight: EMPTYWEIGHT,
       food: EMPTYFOOD,
       foods: [],
+      weight: EMPTYWEIGHT,
       weights: [],
+      exercise: EMPTYEXERCISE,
       exercises: [],
       isLoggedIn: false
     };
@@ -80,8 +92,139 @@ class App extends React.Component {
       .then(data => {
         this.setState({ foods: data });
       });
+  
+      // GET THE EXERCISE RECORDED AFTER A PERSON HAS BEEN SELECTED
+      fetch(`${EXERCISES_URL}/user/${this.state.user.user_name}`)
+      .then(response => response.json())
+      .then (data => {
+        return data.map(exercise=>{
+          return Object.assign(exercise, { totalCalories:this.exerciseTotalCalories(exercise.exercise_details)})
+        })
+      })
+      .then(data => {
+        this.setState({ exercises: data });
+      });
+      
   }
 
+  ///////////////////////////////////////////////////////////////////////////////////
+  // EXERCISE HANDLERS START
+  changeExercise = event => {
+    let exercise = {};
+    Object.assign(exercise, this.state.exercise);
+    exercise[event.target.name] = event.target.value;
+    this.setState({ exercise: exercise });
+  };
+
+  changeExerciseDetail = (event, index) => {
+// Change an individual exercise line item
+    let exercise = {}
+    Object.assign(exercise,this.state.exercise)
+    exercise.exercise_details[index][event.target.name] = event.target.value
+    exercise.totalCalories = this.exerciseTotalCalories(exercise.exercise_details)
+    this.setState({ exercise: exercise });
+  };
+
+  getExerciseUnitCalories = (calories, duration_min ) => {
+    // Returns the base unit, which is calories per minute, allowing for user adjustments.
+       return parseFloat(calories) / parseFloat(duration_min)
+     }
+   
+  exerciseTotalCalories = (data) => {
+     return data.length>0 ?
+       data.map( ed=> 
+             (Math.ceil(ed.duration_min * ed.unit_calories))).reduce( (total,element) => { return total + element  } )
+             : 0
+  }
+
+  submitExercise = event => {
+    // Used to call the API and get the natural language list for the entered exercise
+    event.preventDefault();
+
+    // Should save the Object, and then assign details from the array rather than this clumsy manner
+    let detail = this.state.exercise.detail;
+    let exercise_date = this.state.exercise.exercise_date;
+    let exercise_date_d = this.state.exercise.exercise_date_d;
+    let exercise_date_t = this.state.exercise.exercise_date_t;
+    let exercise_type_id = this.exercise_type_id;
+
+    let configObj = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({ user_name:this.state.user.user_name,
+                      detail:detail})
+    };
+
+    fetch(APIEXERCISE_URL, configObj)
+    .then( data => data.json())
+    .then( data => data.map(ed => {
+      return Object.assign(ed, {photo_thumb:ed.photo.thumb }, {unit_calories: this.getExerciseUnitCalories(ed.nf_calories,ed.duration_min) } )
+    }))
+    .then( data => {
+      this.setState( {exercise: {
+              exercise_details:data,
+              detail:detail,
+              totalCalories : this.exerciseTotalCalories(data),
+              exercise_date:exercise_date,
+              exercise_date_d:exercise_date_d,
+              exercise_date_t:exercise_date_t,
+              exercise_type_id:exercise_type_id
+             }
+            } )
+    })
+  }
+
+  submitExerciseDetail = event => {
+    // Store the food and food details records into the database
+    event.preventDefault();
+    let exercise = {}
+    let exercises = [...this.state.exercises];
+    exercises.push(exercise);
+
+    Object.assign(exercise, this.state.exercise, {user_id:this.state.user.id})
+
+    let configObj = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+        user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
+        exercise: exercise
+      })
+    };
+
+    fetch(EXERCISES_URL, configObj)
+    .then( data => data.json())
+    .then( () => this.setState( {exercises:exercises} ))
+    .then( () => this.resetExercise() );
+
+  }
+
+  resetExercise = () => {
+    // Resets the exercise entry form
+    this.setState({exercise:EMPTYEXERCISE})
+  }
+
+  selectExercise = (datapoint, event) => {
+    let exercise={}
+
+    Object.assign(exercise, this.state.exercises.find(e => e.id === datapoint.id) );
+
+    // Add the split date items to allow the date and time input fields to work
+    Object.assign(exercise,
+          {exercise_date_d:this.dateString(exercise.exercise_date) }, 
+          {exercise_date_t:this.timeString(exercise.exercise_date) }
+        )
+    this.setState({ exercise: exercise });
+  };
+
+  // END OF EXERCISE HANDLERS
+//////////////////////////////////////////////////////////////
   // FOOD HANDLERS START
   changeFood = event => {
     // The handler that changes the food state, for either new or updates of a food entry
@@ -113,15 +256,16 @@ class App extends React.Component {
   };
 
   submitFood = event => {
-    // Used to create a new weight, or update an existing one
+    // Used to get the main food records, that will then be 
+    // saved with submitFoodDetail
+    //
     event.preventDefault();
-
     // Should save the Object, and then assign details from the array rather than this clumsy manner
     let detail = this.state.food.detail;
     let meal_date = this.state.meal_date;
     let meal_date_d = this.state.meal_date_d;
     let meal_date_t = this.meal_date_t;
-
+      
     let configObj = {
       method: "POST",
       headers: {
@@ -153,13 +297,26 @@ class App extends React.Component {
   };
 
   submitFoodDetail = event => {
-    // Store the food and food details records into the database
     event.preventDefault();
-    let food = {};
-    let foods = [...this.state.foods];
-    foods.push(food);
 
-    Object.assign(food, this.state.food, { user_id: this.state.user.id });
+    if (this.state.food.id!==null ) {
+      this.createFoodDetail();
+    } else {
+      this.updateFoodDetail();
+    }
+  }
+
+  updateFoodDetail = () => {
+    console.log(`Updating food record ${this.state.food.id}`)
+  }
+
+  createFoodDetail = () => {
+    // Store the food and food details records into the database
+    let food = {}
+    let foods = [...this.state.foods];
+//    foods.push(food);
+
+    Object.assign(food, this.state.food )
 
     let configObj = {
       method: "POST",
@@ -174,14 +331,32 @@ class App extends React.Component {
     };
 
     fetch(MEALS_URL, configObj)
-      .then(data => data.json())
-      .then(() => this.setState({ foods: foods }))
-      .then(() => this.resetFood());
-  };
+    .then( data => data.json())
+    .then( data => {
+      foods.push(data)
+    })
+    .then( () => this.setState( {foods:foods} ))
+    .then( () => this.resetFood() );
+
+  }
 
   resetFood = () => {
     // Resets the food entry form
     this.setState({ food: EMPTYFOOD });
+  };
+
+  deleteFood = () => {
+    // delete the selected food element
+    console.log("Deleting food");
+    let foods = [];
+    fetch(`${MEALS_URL}/${this.state.food.id}`, { method: "DELETE" }).then(
+      () => {
+        console.log(`delete ${this.state.food.id}`);
+        foods = this.state.foods.filter(f => f.id !== this.state.food.id);
+        this.setState({ foods: foods });
+        this.setState({ food: EMPTYFOOD });
+      }
+    );
   };
 
   selectFood = (datapoint, event) => {
@@ -415,26 +590,43 @@ class App extends React.Component {
             />
           )}
         />
-        <Route
-          path="/Food"
-          render={() => (
-            <Food
-              component={Food}
-              user={this.state.user}
-              foods={this.state.foods}
-              food={this.state.food}
-              submitFood={this.submitFood}
-              submitFoodDetail={this.submitFoodDetail}
-              changeFood={this.changeFood}
-              changeFoodDetail={this.changeFoodDetail}
-              selectFood={this.selectFood}
-            />
+        <Route 
+        path="/Food" 
+        render={() => (
+          <Food 
+            component={Food} 
+            user={this.state.user} 
+            foods={this.state.foods} 
+            food={this.state.food} 
+            submitFood={this.submitFood}
+            submitFoodDetail={this.submitFoodDetail} 
+            changeFood={this.changeFood}
+            changeFoodDetail={this.changeFoodDetail}
+            selectFood={this.selectFood}
+            deleteFood={this.deleteFood}
+            resetFood={this.resetFood}
+          />
+          )}
+        />
+        <Route 
+        path="/Exercise" 
+        render={() => (
+          <Exercise 
+            component={Exercise} 
+            user={this.state.user} 
+            exercises={this.state.exercises} 
+            exercise={this.state.exercise} 
+            submitExercise={this.submitExercise}
+            submitExerciseDetail={this.submitExerciseDetail} 
+            changeExercise={this.changeExercise}
+            changeExerciseDetail={this.changeExerciseDetail}
+            selectExercise={this.selectExercise}
+          />
           )}
         />
 
         <Route path="/Dashboard" component={Dashboard} />
         <Route path="/Account" component={Account} />
-        <Route path="/Exercise" component={Exercise} />
       </Router>
     );
   }

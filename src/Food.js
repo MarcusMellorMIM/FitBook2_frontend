@@ -37,10 +37,13 @@ class Food extends Component {
             <FoodShowDetail
               food={this.props.food}
               changeFoodDetail={this.props.changeFoodDetail}
+              changeFood={this.props.changeFood}
               onSubmit={this.props.submitFoodDetail}
               onChange={this.props.changeFood}
               totalCalories={this.props.food.totalCalories}
               submitFoodDetail={this.props.submitFoodDetail}
+              deleteFood={this.props.deleteFood}
+              resetFood={this.props.resetFood}  
             />
         )
         : 
