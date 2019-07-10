@@ -33,14 +33,17 @@ save the meal into the database */}
               type="date"
               id="foodDate"
               name="meal_date_d"
+              value={this.props.food.meal_date_d}
               onChange={this.props.changeFood}
             />
             <input
               type="time"
               id="foodTime"
               name="meal_date_t"
+              value={this.props.food.meal_date_t}
               onChange={this.props.changeFood}
             />
+            <br/>
             <label htmlFor="meal_type_id">How would you describe this ? </label>
             <select
               defaultValue="1"
@@ -61,6 +64,22 @@ save the meal into the database */}
               Submit
             </button>
           </form>
+
+            {!!this.props.food.id ?
+            <div>
+            <label htmlFor="deleteBtn">Hit delete, to remove this entry, or undo</label>
+            <button id="deleteBtn" name="deleteBtn" onClick={this.props.deleteFood}>
+              Delete
+            </button>
+            <button id="resetBtn" name="resetBtn" onClick={this.props.resetFood}>
+              Undo
+            </button>
+            </div>
+            : null }
+
+
+
+
         </div>
       </div>
     );

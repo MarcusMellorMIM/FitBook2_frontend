@@ -87,7 +87,7 @@ class Weight extends Component {
             <h2>Click on the graph, to select a weight to update or delete</h2>
             <XYPlot
               xType="time"
-              height={400}
+              height={500}
               width={500}
               margin={{ left: 120, right: 20, top: 20, bottom: 120 }}
             >
