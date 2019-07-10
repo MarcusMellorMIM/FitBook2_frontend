@@ -50,40 +50,37 @@ class App extends React.Component {
   componentDidMount() {
     const token = localStorage.getItem("token");
     if (token) {
-      getCurrentUser(token).then(user => {
-        this.setState({ isLoggedIn: true, user: user });
-      });
+      getCurrentUser(token)
+        .then(user => {
+          this.setState({ isLoggedIn: true, user: user });
+        })
+        .then(() => {
+          this.getUserData();
+        });
     }
   }
 
-  // componentDidMount() {
-  //   // THIS SHOULD BE REPLACED BY THE FUNCTION THAT LOGS ON A USER
-  //   fetch(`${USERS_URL}/marcus`)
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       this.setState({ user: data });
-  //     });
+  getUserData() {
+    fetch(`${WEIGHTS_URL}/user/${this.state.user.user_name}`)
+      .then(response => response.json())
+      .then(data => {
+        this.setState({ weights: data });
+      });
 
-  //   // SHOULD WE FETCH ALL IN USERS ??? OR SEPERATE DATA ???
-  //   fetch(`${WEIGHTS_URL}/user/marcus`)
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       this.setState({ weights: data });
-  //     });
-
-  //     // GET THE FOOD RECORDED AFTER A PERSON HAS BEEN SELECTED
-  //     fetch(`${MEALS_URL}/user/marcus`)
-  //     .then(response => response.json())
-  //     .then (data => {
-  //       return data.map(food=>{
-  //         return Object.assign(food, { totalCalories:this.totalCalories(food.meal_details)})
-  //       })
-  //     })
-  //     .then(data => {
-  //       this.setState({ foods: data });
-  //     });
-
-  // }
+    // GET THE FOOD RECORDED AFTER A PERSON HAS BEEN SELECTED
+    fetch(`${MEALS_URL}/user/${this.state.user.user_name}`)
+      .then(response => response.json())
+      .then(data => {
+        return data.map(food => {
+          return Object.assign(food, {
+            totalCalories: this.totalCalories(food.meal_details)
+          });
+        });
+      })
+      .then(data => {
+        this.setState({ foods: data });
+      });
+  }
 
   // FOOD HANDLERS START
   changeFood = event => {
@@ -355,6 +352,7 @@ class App extends React.Component {
         localStorage.setItem("token", data.jwt);
         debugger;
         this.setState({ isLoggedIn: true, user: data.user });
+        this.getUserData();
       }
     });
   };
