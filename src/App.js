@@ -385,7 +385,7 @@ class App extends React.Component {
               user={this.state.user}
               isLoggedIn={this.state.isLoggedIn}
               handleLogin={this.handleLogin}
-              handleLogout={this.handleLogout}
+              handleLogOut={this.handleLogOut}
             />
           )}
         />

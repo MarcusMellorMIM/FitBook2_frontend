@@ -11,6 +11,7 @@ class Login extends Component {
         {this.props.isLoggedIn ? (
           <div>
             <p> {`Hi ${this.props.user.name}, you're now logged in `}</p>
+            <button onClick={this.props.handleLogOut}>Log Out</button>
           </div>
         ) : (
           <form>
