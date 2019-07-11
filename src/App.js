@@ -8,9 +8,11 @@ import Account from "./Account";
 import Exercise from "./Exercise";
 import Dashboard from "./Dashboard";
 import { login, getCurrentUser } from "./api";
+import { Redirect } from 'react-router-dom'
 
 import { BrowserRouter as Router, Route } from "react-router-dom";
-import continuousSizeLegend from "react-vis/dist/legends/continuous-size-legend";
+
+//const WEIGHTS_URL = `${ENV['FITBOOK_ROUTE']}/weights`;
 const WEIGHTS_URL = "http://localhost:3000/weights";
 const USERS_URL = "http://localhost:3000/users";
 const MEALS_URL = "http://localhost:3000/meals";
@@ -573,7 +575,8 @@ class App extends React.Component {
 
   createUser = event => {
     event.preventDefault();
-    if (this.state.user.gender) {
+    if (this.state.user.name && this.state.user.gender && this.state.user.dob && this.state.user.height_cm ) {
+
       let configObj = {
         method: "POST",
         headers: {
@@ -583,9 +586,21 @@ class App extends React.Component {
         body: JSON.stringify({ user: this.state.user })
       };
 
-      fetch(USERS_URL, configObj).then(data => data.json());
+      fetch(USERS_URL, configObj).then(data => data.json())
+      .then( () => login(this.state.user.user_name, this.state.user.password) )
+      .then( data => {
+        console.log(data)
+        localStorage.setItem("token", data.jwt);
+        this.setState({ isLoggedIn: true, user: data.user });
+        this.getUserData();
+      });
+//
+//      .then(() => <Redirect to='/Account' />)
+// WORK TO DO --- NEED TO FIGURE OUT HOW TO REDIRECT
+// POSSIBLY SETSTATE REDIRECT TRUE, THEN IN NAVBAR ..... DO THE REDIRECT
+//
     } else {
-      alert("choose a gender");
+      alert("Please enter your name, gender, height and date of birth. Required to calculate your BMR");
     }
   };
 
@@ -605,7 +620,6 @@ class App extends React.Component {
         this.setState({ user_name: "", password: "" });
       } else {
         localStorage.setItem("token", data.jwt);
-        debugger;
         this.setState({ isLoggedIn: true, user: data.user });
         this.getUserData();
       }
