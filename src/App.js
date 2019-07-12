@@ -20,6 +20,9 @@ const EXERCISES_URL = "http://localhost:3000/exercises";
 const APIFOOD_URL = "http://localhost:3000/api/food";
 const APIEXERCISE_URL = "http://localhost:3000/api/exercise";
 
+const HEADERS = { headers: { "Content-Type": "application/json",
+                            Accept: "application/json" } }
+
 const EMPTYWEIGHT = {
   id: "",
   weight_kg: "",
@@ -37,6 +40,7 @@ const EMPTYFOOD = {
   meal_type_id: "",
   meal_details: []
 };
+
 const EMPTYEXERCISE = {
   detail: "",
   totalCalories: 0,
@@ -46,6 +50,7 @@ const EMPTYEXERCISE = {
   exercise_type_id: "",
   exercise_details: []
 };
+
 
 class App extends React.Component {
   constructor() {
@@ -76,14 +81,19 @@ class App extends React.Component {
   }
 
   getUserData() {
-    fetch(`${WEIGHTS_URL}/user/${this.state.user.user_name}`)
+
+    // let headers = {...HEADERS, headers : {Authorization:token } }
+    let headers=this.getJWTHeaders();
+    console.log(headers)
+
+    fetch(`${WEIGHTS_URL}/user/${this.state.user.user_name}`, headers)
       .then(response => response.json())
       .then(data => {
         this.setState({ weights: data });
       });
 
     // GET THE FOOD RECORDED AFTER A PERSON HAS BEEN SELECTED
-    fetch(`${MEALS_URL}/user/${this.state.user.user_name}`)
+    fetch(`${MEALS_URL}/user/${this.state.user.user_name}`, headers)
       .then(response => response.json())
       .then(data => {
         return data.map(food => {
@@ -97,7 +107,7 @@ class App extends React.Component {
       });
 
     // GET THE EXERCISE RECORDED AFTER A PERSON HAS BEEN SELECTED
-    fetch(`${EXERCISES_URL}/user/${this.state.user.user_name}`)
+    fetch(`${EXERCISES_URL}/user/${this.state.user.user_name}`, headers)
       .then(response => response.json())
       .then(data => {
         return data.map(exercise => {
@@ -110,6 +120,30 @@ class App extends React.Component {
         this.setState({ exercises: data });
       });
   }
+
+  getJWTHeaders = () => {
+    const token = localStorage.getItem("token");
+    let headers={}
+    Object.assign(headers,HEADERS )
+    Object.assign(headers.headers, {Authorization:token })
+    return headers
+  }
+
+  getConfigObj = ( method, body_detail=null ) => {
+
+    let headers = this.getJWTHeaders();
+    Object.assign(headers,  {method:method})
+    let configObj={}
+    if (body_detail) {
+      Object.assign (configObj, headers, {body:JSON.stringify({ detail: body_detail })})
+    } else {
+      Object.assign (configObj, headers)
+    }
+    console.log(configObj)
+    return configObj
+
+  }
+
 
   ///////////////////////////////////////////////////////////////////////////////////
   // EXERCISE HANDLERS START
@@ -156,19 +190,9 @@ class App extends React.Component {
     let exercise_date_d = this.state.exercise.exercise_date_d;
     let exercise_date_t = this.state.exercise.exercise_date_t;
     let exercise_type_id = this.exercise_type_id;
-
-    let configObj = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        user_name: this.state.user.user_name,
-        detail: detail
-      })
-    };
-
+    
+    let configObj = this.getConfigObj("POST", detail)
+ 
     fetch(APIEXERCISE_URL, configObj)
       .then(data => data.json())
       .then(data =>
@@ -211,17 +235,19 @@ class App extends React.Component {
       user_id: this.state.user.id
     });
 
-    let configObj = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
-        exercise: exercise
-      })
-    };
+    // let configObj = {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Accept: "application/json"
+    //   },
+    //   body: JSON.stringify({
+    //     user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
+    //     exercise: exercise
+    //   })
+    // };
+
+    let configObj = this.getConfigObj("POST", exercise)
 
     fetch(EXERCISES_URL, configObj)
       .then(data => data.json())
@@ -304,14 +330,12 @@ class App extends React.Component {
     let meal_date_d = this.state.meal_date_d;
     let meal_date_t = this.meal_date_t;
 
-    let configObj = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({ detail: detail })
-    };
+    // let headers = this.getJWTHeaders();
+    // Object.assign(headers,  {method:"POST"})
+    // let configObj={}
+    // Object.assign(configObj, headers, {body:JSON.stringify({ detail: detail })})
+
+    let configObj = this.getConfigObj("POST", detail)
 
     fetch(APIFOOD_URL, configObj)
       .then(data => data.json())
@@ -371,17 +395,19 @@ class App extends React.Component {
 
     Object.assign(food, this.state.food, { user_id: this.state.user.id });
 
-    let configObj = {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
-        food: food
-      })
-    };
+    // let configObj = {
+    //   method: "PATCH",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Accept: "application/json"
+    //   },
+    //   body: JSON.stringify({
+    //     user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
+    //     food: food
+    //   })
+    // };
+
+    let configObj = this.getConfigObj("PATCH", food)
 
     fetch(`${MEALS_URL}/${food.id}`, configObj)
       .then(data => data.json())
@@ -400,17 +426,19 @@ class App extends React.Component {
 
     Object.assign(food, this.state.food, { user_id: this.state.user.id });
 
-    let configObj = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
-        food: food
-      })
-    };
+    // let configObj = {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Accept: "application/json"
+    //   },
+    //   body: JSON.stringify({
+    //     user_id: this.state.user_id, // NEED TO CHANGE WITH AUTH
+    //     food: food
+    //   })
+    // };
+
+    let configObj = this.getConfigObj("POST", food)
 
     fetch(MEALS_URL, configObj)
       .then(data => data.json())
@@ -430,8 +458,10 @@ class App extends React.Component {
   deleteFood = () => {
     // delete the selected food element
     console.log("Deleting food");
+    let configObj = this.getConfigObj( "DELETE")
     let foods = [];
-    fetch(`${MEALS_URL}/${this.state.food.id}`, { method: "DELETE" }).then(
+    // fetch(`${MEALS_URL}/${this.state.food.id}`, { method: "DELETE" }).then(
+    fetch(`${MEALS_URL}/${this.state.food.id}`, configObj).then(
       () => {
         console.log(`delete ${this.state.food.id}`);
         foods = this.state.foods.filter(f => f.id !== this.state.food.id);
@@ -478,7 +508,9 @@ class App extends React.Component {
     console.log("Deleting weight");
     let weights = [];
 
-    fetch(`${WEIGHTS_URL}/${this.state.weight.id}`, { method: "DELETE" }).then(
+    let configObj = this.getConfigObj( "DELETE")
+    // fetch(`${WEIGHTS_URL}/${this.state.weight.id}`, { method: "DELETE" }).then(
+    fetch(`${WEIGHTS_URL}/${this.state.weight.id}`, configObj).then(
       () => {
         console.log(`delete ${this.state.weight.id}`);
         weights = this.state.weights.filter(w => w.id !== this.state.weight.id);
@@ -499,14 +531,16 @@ class App extends React.Component {
 
     if (this.state.weight.id === "") {
       // Inserting a weight
-      let configObj = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify(weight)
-      };
+      
+      // let configObj = {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Accept: "application/json"
+      //   },
+      //   body: JSON.stringify(weight)
+      // };
+      let configObj = this.getConfigObj( "POST", weight);
 
       fetch(WEIGHTS_URL, configObj)
         .then(data => data.json())
@@ -520,14 +554,16 @@ class App extends React.Component {
         });
     } else {
       //Updating a weight in the database TO BE TESTED
-      let configObj = {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify(weight)
-      };
+      // let configObj = {
+      //   method: "PATCH",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Accept: "application/json"
+      //   },
+      //   body: JSON.stringify(weight)
+      // };
+
+      let configObj = this.getConfigObj( "PATCH", weight);
 
       fetch(`${WEIGHTS_URL}/${weight.id}`, configObj)
         .then(data => data.json())
@@ -577,19 +613,20 @@ class App extends React.Component {
     event.preventDefault();
     if (this.state.user.name && this.state.user.gender && this.state.user.dob && this.state.user.height_cm ) {
 
-      let configObj = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({ user: this.state.user })
-      };
+      // let configObj = {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Accept: "application/json"
+      //   },
+      //   body: JSON.stringify({ user: this.state.user })
+      // };
 
-      fetch(USERS_URL, configObj).then(data => data.json())
+      let configObj = this.getConfigObj( "POST", this.state.user);
+      fetch(USERS_URL, configObj)
+      .then(data => data.json())
       .then( () => login(this.state.user.user_name, this.state.user.password) )
       .then( data => {
-        console.log(data)
         localStorage.setItem("token", data.jwt);
         this.setState({ isLoggedIn: true, user: data.user });
         this.getUserData();
@@ -627,6 +664,7 @@ class App extends React.Component {
   };
 
   handleLogOut = () => {
+    // WORKTODO --- PUT IN A CONST AS THIS IS USED TWICE, HERE AND IN CONSTRUCTOR
     localStorage.clear("token");
     this.setState({
       user: null,
@@ -638,8 +676,13 @@ class App extends React.Component {
       isLoggedIn: false
     });
   };
-
+/////////////////////////////////////////////////////////////
   // END OF USER STATE HANDLERS
+////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////
+// START RENDERING PAGES
+/////////////////////////////////////////////////////////////
 
   // Render the pages, with routes called from the selection from Navbar
   render() {
